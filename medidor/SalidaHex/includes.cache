@@ -1,0 +1,17 @@
+[
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "/home/mariana/.arduino15/packages/arduino/hardware/avr/1.8.5/cores/arduino"
+  },
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "/home/mariana/.arduino15/packages/arduino/hardware/avr/1.8.5/variants/eightanaloginputs"
+  },
+  {
+    "Sourcefile": "/home/mariana/Escritorio/Proyectos/medidor/Programas/SalidaHex/sketch/medidor_1.ino.cpp",
+    "Include": "",
+    "Includepath": null
+  }
+]
