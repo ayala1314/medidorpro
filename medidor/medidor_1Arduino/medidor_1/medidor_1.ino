@@ -1,69 +1,82 @@
 /**
   * @file medidor_1.ino
-  * this program is the first attempt to work with a two digits   
-  * seven segments display. It stay counting and stop when 
-  * a push button is pressed.
+  * this program generate a three digits number and   
+  * then display it in the 7-segments display. A counter start
+  * counting and stop when the push button is pressed, then the
+  * reached number are showed.
 */  
-boolean push = LOW;
-const byte boton = 13;
-byte unidades = 0;
-byte decenaas = 0;
-byte centenas = 0;
-byte cuenta = 0;
-byte contador = 0;
-
-//This constants has the on and off outputs to form the digits in the 7segments display.
-const byte segmentos[] = {0xFC, 0x60, 0xDA, 0xF2, 0x66, 0xB6, 0xBE, 0xE0, 0xFE, 0xE6};
-//This enum keep the pins numbers to activate only one digit in a three digits number
-enum lugar{
-  centenas = 9,
-  decenas = 10,
-  unidades = 11
-} digito;
+boolean push = LOW;   //variable that save the button state
+const byte boton = 13;//pin in wich the button are connected
+byte unidades = 0;    //variable that saves units from the counter
+byte decenas = 0;     //variable that saves decades from the counter
+byte centenas = 0;    //variable that saves cents from the counter
+byte cuenta = 0;      //variable used to get cents, decades and units
+byte contador = 0;    //variable used in the counter
 
 void setup() {
   //  Initializing outputs for 7 segments display
-  for(byte pata=1; pata <=12; pata++)pinMode(pata, OUTPUT);
+  for(byte i=1; i<=12; i++)pinMode(i, OUTPUT);
   // Defining the pin number and direction for a pushbutton
   pinMode(boton,INPUT);
 }
 
 void loop() {
-  push = LOW;
-  unidad = 0;
-  decena = 0;
-  do{
-    // "despliega" function, in this position show the decade digit in the 7 segment display
-    despliega(segmentos[decena], decenas);
-    do{
-      push = digitalRead(boton);
-      // In this position, "despliega" show the units digit in 7 segment display
-      despliega(segmentos[unidad], unidades);
-      unidad = unidad + 1;//Increase the units by one
-      if(unidad > 9) unidad = 0;//Return to 0 after 9
-    }while(unidad == 0);//when raised 9, the loop end
-    decena = decena + 1;//Increase decades by 1
-    if(decena > 9 ) decena = 0;//Return to 0 after 9
-  }while(push == LOW);
-  //Pulling the button. Remains pulling until the button is pushed 
-  push = LOW;
+  //The next loop, increase the 'contador' var until push button is pushed
   do{
     push = digitalRead(boton);
-  }while(push == LOW);
-  push = LOW;
+    contador = contador + 1;
+    if(contador > 999) contador = 0;//Return to 0 after 999
+  }while(push == LOW);// If the push button is pushed, the count stop.
+  cuenta   = contador;//'cuenta' variable will be used todivide the number
+  //Dividing the number to get hundreds
+  centenas = cuenta / 100;
+  cuenta   = cuenta - (centenas * 10);
+  //Dividing the number to get decades
+  decenas  = cuenta / 10;
+  cuenta   = cuenta - (decenas * 10);
+  //Getting units
+  unidades = cuenta;
+  //Resetting 'cuenta' variable
+  cuenta   = 0;
+  //'Despliega' function, display three digits in 7-segments display
+  Despliega(centenas, decenas, unidades);
 }
 
-//Despliega function receive the number to display (byte segmento)
-//and the decimal position: units or decades (digit)
-void despliega(byte segmento, byte digit){
-  digitalWrite(digit, HIGH);
-  digitalWrite(1, segmento & 0x80);
-  digitalWrite(2, segmento & 0x40);
-  digitalWrite(3, segmento & 0x20);
-  digitalWrite(4, segmento & 0x10);
-  digitalWrite(5, segmento & 0x08);
-  digitalWrite(6, segmento & 0x04);
-  digitalWrite(7, segmento & 0x02);
-  delay(300);
-  digitalWrite(digit,LOW);
+/*'Despliega' function receive three numbers to display in the 7 segment display
+the number with three digits; cents, decades and units.*/
+void Despliega( byte centenas, byte decenas, byte unidades ){
+  
+  byte pin_unidades = 11;// pin to select units 7-segments display
+  byte pin_decenas = 10; // pin to select decades 7-segments display
+  byte pin_centenas = 9; // pin to select hundreds 7-segments display
+  // array with the pines to be change in the 7-segments display
+  byte segmentos[] = {0xFC, 0x60, 0xDA, 0xF2, 0x66, 0xB6, 0xBE, 0xE0, 0xFE, 0xE6};
+  
+  digitalWrite(pin_unidades, HIGH); 
+  digitalWrite(1, segmentos[unidades] & 0x80);
+  digitalWrite(1, segmentos[unidades] & 0x40);
+  digitalWrite(1, segmentos[unidades] & 0x20);
+  digitalWrite(1, segmentos[unidades] & 0x10);
+  digitalWrite(1, segmentos[unidades] & 0x08);
+  digitalWrite(1, segmentos[unidades] & 0x04);
+  digitalWrite(1, segmentos[unidades] & 0x02);
+  digitalWrite(pin_unidades, LOW);
+  digitalWrite(pin_decenas, HIGH);
+  digitalWrite(1, segmentos[decenas] & 0x80);
+  digitalWrite(1, segmentos[decenas] & 0x40);
+  digitalWrite(1, segmentos[decenas] & 0x20);
+  digitalWrite(1, segmentos[decenas] & 0x10);
+  digitalWrite(1, segmentos[decenas] & 0x08);
+  digitalWrite(1, segmentos[decenas] & 0x04);
+  digitalWrite(1, segmentos[decenas] & 0x02);
+  digitalWrite(pin_decenas, LOW);
+  digitalWrite(pin_centenas, HIGH);
+  digitalWrite(1, segmentos[centenas] & 0x80);
+  digitalWrite(1, segmentos[centenas] & 0x40);
+  digitalWrite(1, segmentos[centenas] & 0x20);
+  digitalWrite(1, segmentos[centenas] & 0x10);
+  digitalWrite(1, segmentos[centenas] & 0x08);
+  digitalWrite(1, segmentos[centenas] & 0x04);
+  digitalWrite(1, segmentos[centenas] & 0x02);
+  digitalWrite(pin_centenas, LOW);
 }
