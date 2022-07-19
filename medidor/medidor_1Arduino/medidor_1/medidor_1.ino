@@ -4,10 +4,14 @@
   * seven segments display. It stay counting and stop when 
   * a push button is pressed.
 */  
-bool push = LOW;
-byte boton = 13;
-byte unidad;
-byte decena;
+boolean push = LOW;
+const byte boton = 13;
+byte unidades = 0;
+byte decenaas = 0;
+byte centenas = 0;
+byte cuenta = 0;
+byte contador = 0;
+
 //This constants has the on and off outputs to form the digits in the 7segments display.
 const byte segmentos[] = {0xFC, 0x60, 0xDA, 0xF2, 0x66, 0xB6, 0xBE, 0xE0, 0xFE, 0xE6};
 //This enum keep the pins numbers to activate only one digit in a three digits number
