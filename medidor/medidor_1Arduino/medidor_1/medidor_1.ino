@@ -9,8 +9,8 @@ boolean push = LOW;   //variable that save the button state
 const byte boton = 13;//pin in wich the button are connected
 byte unidades = 0;    //variable that saves units from the counter
 byte decenas = 0;     //variable that saves decades from the counter
-byte centenas = 0;    //variable that saves cents from the counter
-byte cuenta = 0;      //variable used to get cents, decades and units
+byte centenas = 0;    //variable that saves hundreds from the counter
+byte cuenta = 0;      //variable used to get hundreds, decades and units
 byte contador = 0;    //variable used in the counter
 
 void setup() {
@@ -27,6 +27,7 @@ void loop() {
     contador = contador + 1;
     if(contador > 999) contador = 0;//Return to 0 after 999
   }while(push == LOW);// If the push button is pushed, the count stop.
+  push = LOW;
   cuenta   = contador;//'cuenta' variable will be used todivide the number
   //Dividing the number to get hundreds
   centenas = cuenta / 100;
@@ -39,11 +40,15 @@ void loop() {
   //Resetting 'cuenta' variable
   cuenta   = 0;
   //'Despliega' function, display three digits in 7-segments display
-  Despliega(centenas, decenas, unidades);
+  do{
+    Despliega(centenas, decenas, unidades);
+    digitalWrite(12,push);
+    if(push == HIGH)break;
+  }while(!(detectaFlanco(boton)));//Quit from the loop in descendent sidewall
 }
 
 /*'Despliega' function receive three numbers to display in the 7 segment display
-the number with three digits; cents, decades and units.*/
+the number with three digits; hundreds, decades and units.*/
 void Despliega( byte centenas, byte decenas, byte unidades ){
   
   byte pin_unidades = 11;// pin to select units 7-segments display
@@ -60,6 +65,7 @@ void Despliega( byte centenas, byte decenas, byte unidades ){
   digitalWrite(1, segmentos[unidades] & 0x08);
   digitalWrite(1, segmentos[unidades] & 0x04);
   digitalWrite(1, segmentos[unidades] & 0x02);
+  delay(5);
   digitalWrite(pin_unidades, LOW);
   digitalWrite(pin_decenas, HIGH);
   digitalWrite(1, segmentos[decenas] & 0x80);
@@ -69,6 +75,7 @@ void Despliega( byte centenas, byte decenas, byte unidades ){
   digitalWrite(1, segmentos[decenas] & 0x08);
   digitalWrite(1, segmentos[decenas] & 0x04);
   digitalWrite(1, segmentos[decenas] & 0x02);
+  delay(5);
   digitalWrite(pin_decenas, LOW);
   digitalWrite(pin_centenas, HIGH);
   digitalWrite(1, segmentos[centenas] & 0x80);
@@ -78,5 +85,36 @@ void Despliega( byte centenas, byte decenas, byte unidades ){
   digitalWrite(1, segmentos[centenas] & 0x08);
   digitalWrite(1, segmentos[centenas] & 0x04);
   digitalWrite(1, segmentos[centenas] & 0x02);
+  delay(5);
   digitalWrite(pin_centenas, LOW);
+}
+
+/*The 'detectaFlanco' function check the input especified by 
+ * 'pin' parameter and return:
+ *  1  if we have an ascendent sidewall
+ * -1  if it detect an descendent sidewall
+ *  0  if we have not any change
+ */
+int detectaFlanco(int pin){
+  //'anterior_estado' keep the last value detected in the pin
+  static boolean anterior_estado = digitalRead(pin);
+  //'estado' has the actual value detected in the pin
+  boolean estado = digitalRead(pin);
+  //first if: we have a change
+  if (anterior_estado != estado){
+    //Change from LOW to HIGH
+    if (estado == HIGH) {
+      anterior_estado = estado;
+      return 1;
+    }
+    //Change from HIGH to LOW
+    else {
+      anterior_estado = estado;
+      return -1;
+    }
+  }
+  //No change in the pin
+  else {
+    return 0;  
+  }
 }
