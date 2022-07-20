@@ -5,7 +5,7 @@
   * counting and stop when the push button is pressed, then the
   * reached number are showed.
 */  
-boolean push = LOW;   //variable that save the button state
+volatile boolean push = LOW;   //variable that save the button state
 const byte boton = 13;//pin in wich the button are connected
 byte unidades = 0;    //variable that saves units from the counter
 byte decenas = 0;     //variable that saves decades from the counter
