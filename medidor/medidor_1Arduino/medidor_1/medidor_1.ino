@@ -1,50 +1,50 @@
 /**
   * @file medidor_1.ino
-  * this program generate a three digits number and   
-  * then display it in the 7-segments display. A counter start
-  * counting and stop when the push button is pressed, then the
-  * reached number are showed.
-*/  
+  * this program take a measure with an ultrasonic sensor, calculate    
+  * the distance and then display it in the 7-segments three digits display. 
+*/ 
+
 volatile boolean push = LOW;   //variable that save the button state
-const byte boton = 13;//pin in wich the button are connected
+const byte disparo = 12; //Number of the pin that triggers the sensor function
+const byte boton  = 13;//Number of the pin in which is connected the shot button
+const byte sensor = 14;//Number of pin in wich is connected the shot button
+double distancia  = 0; //Variable that keep the distance calculated/measure
+double eco = 0;        //Variable that saves a value proportional with the measured distance
 byte unidades = 0;    //variable that saves units from the counter
-byte decenas = 0;     //variable that saves decades from the counter
+byte decenas  = 0;    //variable that saves decades from the counter
 byte centenas = 0;    //variable that saves hundreds from the counter
-byte cuenta = 0;      //variable used to get hundreds, decades and units
-byte contador = 0;    //variable used in the counter
 
 void setup() {
   //  Initializing outputs for 7 segments display
   for(byte i=1; i<=12; i++)pinMode(i, OUTPUT);
   // Defining the pin number and direction for a pushbutton
-  pinMode(boton,INPUT);
+  pinMode(disparo,OUTPUT);//Initialize pin for shot the sensor
+  pinMode(boton, INPUT);//Initialize pin to check the shot button status
+  pinMode(sensor,INPUT);//Initialize pin to check the sensor signal
 }
 
 void loop() {
-  //The next loop, increase the 'contador' var until push button is pushed
-  do{
-    push = digitalRead(boton);
-    contador = contador + 1;
-    if(contador > 999) contador = 0;//Return to 0 after 999
-  }while(push == LOW);// If the push button is pushed, the count stop.
-  push = LOW;
-  cuenta   = contador;//'cuenta' variable will be used todivide the number
-  //Dividing the number to get hundreds
-  centenas = cuenta / 100;
-  cuenta   = cuenta - (centenas * 10);
-  //Dividing the number to get decades
-  decenas  = cuenta / 10;
-  cuenta   = cuenta - (decenas * 10);
-  //Getting units
-  unidades = cuenta;
-  //Resetting 'cuenta' variable
-  cuenta   = 0;
-  //'Despliega' function, display three digits in 7-segments display
-  do{
-    Despliega(centenas, decenas, unidades);
-    digitalWrite(12,push);
-    if(push == HIGH)break;
-  }while(!(detectaFlanco(boton)));//Quit from the loop in descendent sidewall
+  //Check the start button status
+  push = digitalRead(boton);//This function get a free noise signal from 'boton'
+  //When start button is pushed, measuring are done
+  if(push == HIGH){
+    //Measured distance are obtained from the proportional value given by the sensor
+    //This value are given us throught the 'Lectura_de_distancia' function
+    distancia = Lectura_de_distancia(disparo, sensor)/58.2;
+    //Dividing the number to get hundreds
+    centenas    = distancia / 100;
+    distancia   = distancia - (centenas * 10);
+    //Dividing the number to get decades
+    decenas     = distancia / 10;
+    distancia   = distancia - (decenas * 10);
+    //Getting units
+    unidades    = distancia;
+    //Resetting 'distancia' variable
+    distancia   = 0;
+  }
+  push = LOW; //Cleaning the start button status
+  //'Despliega' function, display measured distance in three digits, 7-segments display
+  Despliega(centenas, decenas, unidades);
 }
 
 /*'Despliega' function receive three numbers to display in the 7 segment display
@@ -89,32 +89,24 @@ void Despliega( byte centenas, byte decenas, byte unidades ){
   digitalWrite(pin_centenas, LOW);
 }
 
-/*The 'detectaFlanco' function check the input especified by 
- * 'pin' parameter and return:
- *  1  if we have an ascendent sidewall
- * -1  if it detect an descendent sidewall
- *  0  if we have not any change
+/* The function 'Lectura_de_distancia' drive the ultrasonic sensor and 
+ *  return a value that is proportional with the distance measured.
+ *  Receive the number pins for trigger (byte trigger) 
+ *  and sensor response (byte sensor)
  */
-int detectaFlanco(int pin){
-  //'anterior_estado' keep the last value detected in the pin
-  static boolean anterior_estado = digitalRead(pin);
-  //'estado' has the actual value detected in the pin
-  boolean estado = digitalRead(pin);
-  //first if: we have a change
-  if (anterior_estado != estado){
-    //Change from LOW to HIGH
-    if (estado == HIGH) {
-      anterior_estado = estado;
-      return 1;
-    }
-    //Change from HIGH to LOW
-    else {
-      anterior_estado = estado;
-      return -1;
-    }
-  }
-  //No change in the pin
-  else {
-    return 0;  
-  }
+float Lectura_de_distancia (byte trigger, byte sensor){
+  //First we send a high pulse that remain in high for 10 miliseconds
+  //The signal are sending throught 'trigger' pin
+  digitalWrite(trigger,LOW);
+  delay(2);
+  digitalWrite(trigger,HIGH);
+  delay(10);
+  digitalWrite(trigger,LOW);
+  
+  eco = 0;//Initialize 'eco' variable
+  //Get a value proportional with the measured distance. 
+  eco = pulseIn(sensor, HIGH);
+  // Sending the obtained value
+  return (eco);
+  
 }
